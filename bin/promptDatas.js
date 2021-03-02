@@ -4,10 +4,17 @@ const frameWorkPrompt = [{
     message: '请选择框架',
     choices: [{
             name: 'react',
+            value: {
+                name: 'react',
+                url: ''
+            }
         },
         {
-            name: 'vue',
-            url: 'github:maixing/vue3-demo#main'
+            name: 'vue3-demo',
+            value: {
+                name: 'vue3-demo',
+                url: 'github:maixing/vue3-demo#main'
+            }
         }
     ]
 }]

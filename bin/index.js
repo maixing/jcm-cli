@@ -2,8 +2,7 @@
 
 const inquirer = require('inquirer')
 const prompts = require('./promptDatas')
-
-const clone = require("git-clone-promise");
+const ora = require("ora");
 const download = require('download-git-repo');
 const semver = require("semver");
 const program = require("commander");
@@ -27,6 +26,32 @@ if (!shell.which("git")) {
 	console.log(chalk.red(`您的系统没有配置git环境变量，请先配置git环境变量!`));
 	process.exit(1);
 }
+
+function cloneGit(projectName, url) {
+	let process = ora(`正在创建${projectName}项目中....`);
+	process.start();
+	download(url, projectName, {
+		clone: true
+	}, (err) => {
+		console.log(err ? 'Error' : 'Success')
+		if (!err) {
+			process.succeed();
+			// console.log(chalk.green(`项目创建成功,即将为您初始化，请稍等!`));
+			// process = ora(`项目创建成功,即将为您初始化，请稍等!`);
+			process.stopAndPersist({
+				text: '项目创建成功,即将为您初始化，请稍等!'
+			})
+			process.start();
+			shell.cd(projectName);
+			shell.exec("npm i --registry=https://registry.npm.taobao.org --ignore-script");
+			console.log(chalk.green(`依赖包安装完毕!`));
+			process.succeed();
+		} else {
+			process.fail();
+			process.stop()
+		}
+	})
+}
 program
 	.version("1.0.0")
 	.command("create [projectName]")
@@ -37,32 +62,19 @@ program
 		const answer = inquirer.prompt(prompts.frameWorkPrompt)
 		answer.then(async (result) => {
 			const {
-				url,
-				gitName,
-				val
+				name,
+				url
 			} = result.type;
+			console.log('result---->>%o', result);
 			console.clear()
-			inquirer.prompt(prompts.reactPrompt).then(async () => {
-				download('github:maixing/ultra-react#master', projectName, {
-					clone: true
-				}, (err) => {
-					console.log(err ? 'Error' : 'Success')
+			if (name === 'vue3-demo') {
+				cloneGit(projectName, url)
+			} else {
+				inquirer.prompt(prompts.reactPrompt).then(async (p) => {
+					cloneGit(projectName, p.type.url)
 				})
-			})
+			}
 		});
-		// let prectType = "git@github.com:maixing/ultra-react.git";
-		// if (type == "ts") {
-		// 	prectType = "git@github.com:maixing/ultra-react-ts.git";
-		// }
-		// clone(prectType, localpath).then((res) => {
-		// 	shell.rm("-rf", path.join(localpath, ".git"));
-		// 	shell.cd(projectName);
-		// 	console.log(chalk.green(`工程创建完毕………………`));
-		// 	console.log(chalk.green(`开始安装依赖包,可能需要几分钟，请耐心等待………………`));
-		// 	shell.exec("npm install --registry=https://registry.npm.taobao.org --ignore-script");
-		// 	console.log(chalk.green(`依赖包安装完毕!`));
-		// 	console.log(chalk.blue(`请参考${projectName}/README.md，进行项目开发`));
-		// });
 	});
 
 program.parse(process.argv);
