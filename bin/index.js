@@ -3,6 +3,7 @@
 const inquirer = require('inquirer')
 const prompts = require('./promptDatas')
 const ora = require("ora");
+const fs = require("fs");
 const download = require('download-git-repo');
 const semver = require("semver");
 const program = require("commander");
@@ -33,19 +34,12 @@ function cloneGit(projectName, url) {
 	download(url, projectName, {
 		clone: true
 	}, (err) => {
-		console.log(err ? 'Error' : 'Success')
 		if (!err) {
 			process.succeed();
-			// console.log(chalk.green(`项目创建成功,即将为您初始化，请稍等!`));
-			// process = ora(`项目创建成功,即将为您初始化，请稍等!`);
-			process.stopAndPersist({
-				text: '项目创建成功,即将为您初始化，请稍等!'
-			})
-			process.start();
+			console.log(chalk.green(`项目创建成功,即将为您初始化，请稍等!`));
 			shell.cd(projectName);
 			shell.exec("npm i --registry=https://registry.npm.taobao.org --ignore-script");
 			console.log(chalk.green(`依赖包安装完毕!`));
-			process.succeed();
 		} else {
 			process.fail();
 			process.stop()
@@ -59,6 +53,16 @@ program
 	.description("用来创建项目")
 	.action(function (projectName = "demo-project", options) {
 		console.log(chalk.green(`jcm-cli正在为你服务`));
+		const filePath = path.join(shell.pwd().toString(), projectName);
+		try {
+			//判断文件夹是否存在，存在删除
+			var stat = fs.statSync(filePath);
+			if (stat.isDirectory()) {
+				fs.rmdir(filePath)
+			}
+		} catch (error) {
+
+		}
 		const answer = inquirer.prompt(prompts.frameWorkPrompt)
 		answer.then(async (result) => {
 			const {
